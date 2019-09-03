@@ -1,32 +1,33 @@
 import React from "react";
-import { render } from "react-dom";
-import { Router, Link } from "@reach/router";
-import pf from "petfinder-client";
-import { Provider } from "./SearchContext";
-import Results from "./Results";
-import Details from "./Details";
-import SearchParams from "./SearchParams";
+// import { render } from "react-dom";
+import { Router } from "@reach/router";
+import Loadable from "react-loadable";
+import Navbar from "./Navbar";
+import { Provider } from "react-redux";
+import store from "./store";
 
-const petfinder = pf({
-  key: process.env.API_KEY,
-  secret: process.env.API_SECRET
+const LoadableResults = Loadable({
+  loader: () => import("./Results"),
+  loading() {
+    return <h1>loading split out code ...</h1>;
+  }
+});
+
+const LoadableSearchParams = Loadable({
+  loader: () => import("./SearchParams"),
+  loading() {
+    return <h1>loading split out code ...</h1>;
+  }
+});
+
+const LoadableDetails = Loadable({
+  loader: () => import("./Details"),
+  loading() {
+    return <h1>loading split out code ...</h1>;
+  }
 });
 
 class App extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      location: "Aurora, IL",
-      animal: "",
-      breed: "",
-      breeds: [],
-      handleAnimalChange: this.handleAnimalChange,
-      handleBreedChange: this.handleBreedChange,
-      handleLocationChange: this.handleLocationChange,
-      getBreeds: this.getBreeds
-    };
-  }
   handleLocationChange = event => {
     this.setState({
       location: event.target.value
@@ -48,46 +49,15 @@ class App extends React.Component {
       breed: event.target.value
     });
   };
-
-  getBreeds() {
-    if (this.state.animal) {
-      petfinder.breed.list({ animal: this.state.animal }).then(data => {
-        if (
-          data.petfinder &&
-          data.petfinder.breeds &&
-          Array.isArray(data.petfinder.breeds.breed)
-        ) {
-          this.setState({
-            breeds: data.petfinder.breeds.breed
-          });
-        } else {
-          this.setState({
-            breeds: []
-          });
-        }
-      });
-    } else {
-      this.setState({
-        breeds: []
-      });
-    }
-  }
   render() {
     return (
       <div>
-        <header>
-          <Link to="/">Adopt Me!</Link>
-          <Link to="/search-params">
-            <span aria-label="search" role="img">
-              🔍
-            </span>
-          </Link>
-        </header>
-        <Provider value={this.state}>
+        <Navbar />
+        <Provider store={store}>
           <Router>
-            <Results path="/" />
-            <Details path="/details/:id" />
-            <SearchParams path="/search-params" />
+            <LoadableResults path="/" />
+            <LoadableDetails path="/details/:id" />
+            <LoadableSearchParams path="/search-params" />
           </Router>
         </Provider>
       </div>
@@ -95,4 +65,6 @@ class App extends React.Component {
   }
 }
 
-render(<App />, document.getElementById("root"));
+// render(<App />, document.getElementById("root"));
+
+export default App;
